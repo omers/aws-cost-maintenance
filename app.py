@@ -62,24 +62,6 @@ def stop_instances(event):
 
 
 @app.schedule(Cron(00, 20, "*", "*", "?", "*"))
-def delete_old_amis(event):
-    present = datetime.datetime.now().replace(tzinfo=utc) - datetime.timedelta(
-        AMY_OLDER_THAN
-    )
-    REGIONS = get_regions()
-    for region in REGIONS:
-        client = boto3.client("ec2", region_name=region)
-        amis = client.describe_images(Owners=["self"])
-        for ami in amis["Images"]:
-            create_date = datetime.datetime.strptime(
-                ami["CreationDate"], "%Y-%m-%dT%H:%M:%S.%fZ"
-            ).replace(tzinfo=utc)
-            if create_date < present:
-                ami_id = ami["ImageId"]
-                print(ami_id, create_date)
-
-
-@app.schedule(Cron(00, 20, "*", "*", "?", "*"))
 def delete_old_snapshots(event):
     REGIONS = get_regions()
     utc = pytz.UTC
@@ -103,31 +85,3 @@ def delete_old_snapshots(event):
                 if "is currently in use by" in str(e):
                     print("skipping this snapshot {}".format(snapshotid))
                     continue
-
-
-@app.route("/list_instances")
-def spots_vs_on_demand():
-    REGIONS = get_regions()
-    resp = {}
-    for region in REGIONS:
-        ec2 = boto3.client("ec2", region_name=region)
-        filters = [
-            {"Name": "instance-state-name", "Values": ["running"]},
-            {"Name": "instance-type", "Values": GPU_TYPES},
-        ]
-        instances = ec2.describe_instances(Filters=filters).get("Reservations")
-        spots = ec2.describe_spot_instance_requests()
-        if not instances:
-            continue
-        else:
-            for reservation in instances:
-                for instance in reservation["Instances"]:
-                    continue
-            resp[region] = len(instances)
-        running_spots = [
-            spot
-            for spot in spots["SpotInstanceRequests"]
-            if spot["State"] == "active"
-            and spot["LaunchSpecification"]["InstanceType"] in GPU_TYPES
-        ]
-    return resp
