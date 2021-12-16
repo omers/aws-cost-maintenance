@@ -4,11 +4,19 @@
   "stages": {
     "dev": {
       "autogen_policy": false,
-      "iam_policy_file": "iam_policy.json"
+      "iam_policy_file": "iam_policy.json",
+      "environment_variables": {
+        "SNAPSHOT_OLDER_THAN": "512",
+        "AMI_OLDER_THAN": "512"
+      }
     },
     "prod": {
       "autogen_policy": false,
-      "iam_policy_file": "iam_policy.json"
+      "iam_policy_file": "iam_policy.json",
+      "environment_variables": {
+        "SNAPSHOT_OLDER_THAN": "512",
+        "AMI_OLDER_THAN": "512"
+      }
     }
   }
 }
